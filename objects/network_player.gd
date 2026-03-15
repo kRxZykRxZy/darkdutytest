@@ -6,6 +6,7 @@ extends CharacterBody3D
 var gravity := 0.0
 var local_controlled := false
 var look_x := 0.0
+var team_name := "SHELLSHOCKERS"
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera
@@ -14,6 +15,17 @@ var look_x := 0.0
 func configure(is_local: bool) -> void:
 	local_controlled = is_local
 	camera.current = is_local
+@onready var team_label: Label3D = $TeamLabel
+
+func configure(is_local: bool, assigned_team: String) -> void:
+	local_controlled = is_local
+	team_name = assigned_team
+	camera.current = is_local
+	team_label.text = assigned_team
+	if assigned_team == "RUSHTEAM":
+		body_mesh.modulate = Color(0.85, 0.25, 0.2, 1)
+	else:
+		body_mesh.modulate = Color(0.2, 0.5, 0.95, 1)
 	if is_local:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
@@ -38,6 +50,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	_send_transform.rpc_unreliable(global_transform, head.rotation.x)
+	_send_transform.rpc(global_transform, head.rotation.x)
 
 func _input(event: InputEvent) -> void:
 	if !local_controlled:
