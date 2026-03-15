@@ -29,6 +29,8 @@ var health: int = 100
 var gravity := 0.0
 var jumps_remaining: int
 var default_fov := 80.0
+var active_vehicle: Vehicle = null
+var vehicle_seat := ""
 
 var container_offset = Vector3(1.2, -1.1, -2.75)
 var tween: Tween
@@ -77,6 +79,9 @@ func _ready():
 
 func _process(delta):
 	_update_actions()
+	_update_vehicle(delta)
+	if active_vehicle:
+		return
 	handle_gravity(delta)
 	_update_movement()
 
@@ -173,12 +178,42 @@ func _update_actions() -> void:
 	if Input.is_action_just_pressed("heal"):
 		action_heal()
 
+	if Input.is_action_just_pressed("vehicle_interact"):
+		action_vehicle_interact()
+
+	if Input.is_action_just_pressed("vehicle_switch_seat"):
+		action_vehicle_switch_seat()
+
+	if Input.is_action_just_pressed("vehicle_exit"):
+		action_vehicle_exit()
+
+
+func _update_vehicle(delta: float) -> void:
+	if !active_vehicle:
+		return
+
+	var seat_transform := active_vehicle.seat_transform(vehicle_seat)
+	global_position = seat_transform.origin
+	if vehicle_seat == "driver":
+		rotation.y = active_vehicle.rotation.y
+		rotation_target.y = rotation.y
+	velocity = Vector3.ZERO
+
+	if vehicle_seat == "driver":
+		var move_axis := Input.get_axis("move_back", "move_forward")
+		var turn_axis := Input.get_axis("move_right", "move_left")
+		var firing := Input.is_action_pressed("shoot")
+		active_vehicle.drive_and_fire(delta, move_axis, turn_axis, firing)
+
 
 # --------------------------------------------------
 # SHOOTING
 # --------------------------------------------------
 
 func action_shoot():
+	if active_vehicle and vehicle_seat == "driver":
+		return
+
 	if is_reloading:
 		return
 
@@ -296,6 +331,58 @@ func _on_heal_timer_timeout() -> void:
 	pass
 
 
+func action_vehicle_interact() -> void:
+	if active_vehicle:
+		return
+	var nearby_vehicle := _find_nearby_vehicle()
+	if !nearby_vehicle:
+		return
+	var new_seat := nearby_vehicle.enter(self)
+	if new_seat.is_empty():
+		return
+	active_vehicle = nearby_vehicle
+	vehicle_seat = new_seat
+	is_reloading = false
+	action_scope(false)
+
+
+func action_vehicle_switch_seat() -> void:
+	if !active_vehicle:
+		return
+	var new_seat := active_vehicle.switch_seat(self)
+	if new_seat.is_empty():
+		return
+	vehicle_seat = new_seat
+
+
+func action_vehicle_exit() -> void:
+	if !active_vehicle:
+		return
+	var current_vehicle := active_vehicle
+	current_vehicle.exit(self)
+	active_vehicle = null
+	vehicle_seat = ""
+	gravity = 0.0
+	var exit_pos := current_vehicle.global_transform.origin + current_vehicle.transform.basis.x * 2.2
+	global_position = exit_pos
+
+
+func _find_nearby_vehicle() -> Vehicle:
+	var nearest: Vehicle = null
+	var best_dist := 1000000.0
+	for node in get_tree().get_nodes_in_group("drivable_vehicle"):
+		var candidate := node as Vehicle
+		if candidate == null:
+			continue
+		if !candidate.has_seat_for(self):
+			continue
+		var distance := global_position.distance_to(candidate.global_position)
+		if distance < 4.0 and distance < best_dist:
+			best_dist = distance
+			nearest = candidate
+	return nearest
+
+
 # --------------------------------------------------
 # DAMAGE SYSTEM
 # --------------------------------------------------
@@ -337,4 +424,5 @@ func _get_loadout_lines() -> Array[String]:
 	lines.append("Mouse Wheel / E: Switch")
 	lines.append("R: Reload | Right Click: Scope")
 	lines.append("H: Heal")
+	lines.append("F: Enter Vehicle | G: Swap Seat | X: Exit Vehicle")
 	return lines

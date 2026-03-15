@@ -9,6 +9,10 @@ This Godot project provides a playable war-shooter sandbox with:
 - Team mode (**SHELLSHOCKERS** vs **RUSHTEAM**)
 - Expanded loadout (RPG, Assault Rifle, Shotgun, Grenade Launcher, Sniper, LMG, SMG, Battle Rifle)
 - Large war-city arena including static vehicle and helicopter battlefield props
+- Drivable combat vehicles with:
+  - driver seat movement
+  - mounted vehicle gun fire
+  - passenger seat shooting support
 
 ## Main Flow
 
@@ -35,6 +39,9 @@ This Godot project provides a playable war-shooter sandbox with:
 | `R` | Reload |
 | `Right Mouse` | Scope |
 | `H` | Heal (medkit) |
+| `F` | Enter nearest vehicle |
+| `G` | Switch driver/passenger seat |
+| `X` | Exit vehicle |
 | `Esc` | Release mouse |
 
 ## License

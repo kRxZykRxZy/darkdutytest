@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://d2g78tpqbyf5g" path="res://objects/enemy.tscn" id="8_7ty2f"]
 [ext_resource type="PackedScene" uid="uid://oqfhfp1a80qd" path="res://objects/cloud.tscn" id="10_5ksau"]
 [ext_resource type="Script" path="res://scripts/campaign_level.gd" id="11_campaign"]
+[ext_resource type="PackedScene" path="res://objects/vehicle.tscn" id="12_vehicle"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_fpmwk"]
 font = ExtResource("3_w27de")
@@ -123,6 +124,12 @@ transform = Transform3D(0.866026, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866026, 12, 2.5, -
 
 [node name="platform-large-grass4" parent="Level" unique_id=851780756 instance=ExtResource("7_wggef")]
 transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 5, 0.5, 5.5)
+
+[node name="DrivableVehicleA" parent="Level" instance=ExtResource("12_vehicle")]
+transform = Transform3D(0.906308, 0, -0.422618, 0, 1, 0, 0.422618, 0, 0.906308, -14, 0.5, 12)
+
+[node name="DrivableVehicleB" parent="Level" instance=ExtResource("12_vehicle")]
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 18, 0.5, -12)
 
 [node name="Decoration" type="Node" parent="." unique_id=912926462]
 
