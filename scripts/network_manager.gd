@@ -40,6 +40,7 @@ func start_host(port: int, lobby_max_players: int, password: String) -> bool:
 	is_host = true
 	max_players = lobby_max_players
 	server_password = password.strip_edges()
+	requested_password = server_password
 	multiplayer.multiplayer_peer = peer
 	_register_peer_callbacks()
 	get_tree().change_scene_to_file(MULTIPLAYER_SCENE)

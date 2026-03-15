@@ -1,0 +1,56 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://objects/vehicle.gd" id="1_vehicle_script"]
+[ext_resource type="Texture2D" uid="uid://8ggihh27mlrr" path="res://sprites/blob_shadow.png" id="2_shadow"]
+
+[sub_resource type="BoxShape3D" id="1_body_shape"]
+size = Vector3(4.8, 1.6, 2.8)
+
+[sub_resource type="BoxMesh" id="2_body_mesh"]
+size = Vector3(4.8, 1.6, 2.8)
+
+[sub_resource type="BoxMesh" id="3_cabin_mesh"]
+size = Vector3(2.2, 1.2, 2.4)
+
+[sub_resource type="BoxMesh" id="4_gun_mesh"]
+size = Vector3(1.0, 0.25, 1.4)
+
+[node name="Vehicle" type="CharacterBody3D" groups=["drivable_vehicle"]]
+script = ExtResource("1_vehicle_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("1_body_shape")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+mesh = SubResource("2_body_mesh")
+
+[node name="Cabin" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.9, 0)
+mesh = SubResource("3_cabin_mesh")
+
+[node name="GunBarrel" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.3, 0, 0, 0, 0.2, 0, 0, 0, 1.2, 1.7, 0.9, 0)
+mesh = SubResource("4_gun_mesh")
+
+[node name="Shadow" type="Decal" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.8, 0)
+size = Vector3(5, 2, 3)
+texture_albedo = ExtResource("2_shadow")
+modulate = Color(1, 1, 1, 0.647059)
+normal_fade = 0.5
+
+[node name="DriverSeat" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.0, 0)
+
+[node name="PassengerSeat" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.0, 0.55)
+
+[node name="ExitPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0.6, -1.2)
+
+[node name="GunMuzzle" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1, 0)
+
+[node name="RayCast3D" type="RayCast3D" parent="GunMuzzle"]
+target_position = Vector3(0, 0, -60)
+exclude_parent = false

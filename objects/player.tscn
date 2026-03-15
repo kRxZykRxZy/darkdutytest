@@ -9,6 +9,9 @@
 [ext_resource type="Resource" path="res://weapons/shotgun.tres" id="7_shotgun"]
 [ext_resource type="Resource" path="res://weapons/grenade_launcher.tres" id="8_grenade"]
 [ext_resource type="Resource" path="res://weapons/sniper.tres" id="9_sniper"]
+[ext_resource type="Resource" path="res://weapons/lmg.tres" id="10_lmg"]
+[ext_resource type="Resource" path="res://weapons/smg.tres" id="11_smg"]
+[ext_resource type="Resource" path="res://weapons/battle_rifle.tres" id="12_battle"]
 [ext_resource type="SpriteFrames" uid="uid://dbv3sy5qjatnl" path="res://sprites/burst_animation.tres" id="4_m6ukc"]
 [ext_resource type="AudioStream" uid="uid://cydjn1ct3hps2" path="res://sounds/walking.ogg" id="5_ics1s"]
 
@@ -19,7 +22,7 @@ height = 1.0
 [node name="Player" type="CharacterBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 script = ExtResource("1_ffboj")
-weapons = Array[ExtResource("2_i825w")]([ExtResource("6_rpg"), ExtResource("2_assault"), ExtResource("7_shotgun"), ExtResource("8_grenade"), ExtResource("9_sniper")])
+weapons = Array[ExtResource("2_i825w")]([ExtResource("6_rpg"), ExtResource("2_assault"), ExtResource("7_shotgun"), ExtResource("8_grenade"), ExtResource("9_sniper"), ExtResource("10_lmg"), ExtResource("11_smg"), ExtResource("12_battle")])
 
 [node name="Collider" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)

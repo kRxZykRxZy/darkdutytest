@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://d2g78tpqbyf5g" path="res://objects/enemy.tscn" id="8_7ty2f"]
 [ext_resource type="PackedScene" uid="uid://oqfhfp1a80qd" path="res://objects/cloud.tscn" id="10_5ksau"]
 [ext_resource type="Script" path="res://scripts/campaign_level.gd" id="11_campaign"]
+[ext_resource type="PackedScene" path="res://objects/vehicle.tscn" id="12_vehicle"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_fpmwk"]
 font = ExtResource("3_w27de")
@@ -21,8 +22,9 @@ outline_color = Color(0, 0, 0, 0.470588)
 [node name="Main" type="Node3D" unique_id=1176673032]
 script = ExtResource("11_campaign")
 next_level_path = ""
-intro_text = "Final assault: wipe every drone."
-additional_enemy_positions = [Vector3(-20, 5, -15), Vector3(20, 5, 15), Vector3(-22, 5, 14), Vector3(16, 7, -16), Vector3(0, 8, 0)]
+intro_text = "Operation Thunder Spear: final assault on the command skyline."
+additional_enemy_positions = [Vector3(-20, 5, -15), Vector3(20, 5, 15), Vector3(-22, 5, 14), Vector3(16, 7, -16), Vector3(0, 8, 0), Vector3(-30, 8, 6), Vector3(30, 8, -6), Vector3(0, 10, -22)]
+mission_stages = PackedStringArray("Breach command perimeter", "Destroy helicopter escort", "Eliminate the final wave")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=529470734]
 environment = ExtResource("1_q8fpv")
@@ -123,6 +125,12 @@ transform = Transform3D(0.866026, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866026, 12, 2.5, -
 [node name="platform-large-grass4" parent="Level" unique_id=851780756 instance=ExtResource("7_wggef")]
 transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 5, 0.5, 5.5)
 
+[node name="DrivableVehicleA" parent="Level" instance=ExtResource("12_vehicle")]
+transform = Transform3D(0.906308, 0, -0.422618, 0, 1, 0, 0.422618, 0, 0.906308, -14, 0.5, 12)
+
+[node name="DrivableVehicleB" parent="Level" instance=ExtResource("12_vehicle")]
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 18, 0.5, -12)
+
 [node name="Decoration" type="Node" parent="." unique_id=912926462]
 
 [node name="cube2" parent="Decoration" unique_id=1196119060 instance=ExtResource("10_5ksau")]
@@ -161,4 +169,3 @@ transform = Transform3D(1.12202, 1.39419, -2.40776, 1.53922, 1.85165, 1.78946, 2
 [connection signal="health_updated" from="Player" to="HUD" method="_on_health_updated"]
 [connection signal="ammo_updated" from="Player" to="HUD" method="_on_ammo_updated"]
 [connection signal="loadout_updated" from="Player" to="HUD" method="_on_loadout_updated"]
-
