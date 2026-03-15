@@ -1,3 +1,10 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/multiplayer_game.gd" id="1"]
+[ext_resource type="Environment" uid="uid://jvmpkdwaeaq" path="res://scenes/main-environment.tres" id="2"]
+[ext_resource type="PackedScene" uid="uid://bvx5cvigosg0s" path="res://objects/platform_large_grass.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://r7rt7pth4u7o" path="res://objects/wall_low.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://c71evdjblk5wp" path="res://objects/wall_high.tscn" id="5"]
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/multiplayer_game.gd" id="1"]
@@ -13,11 +20,37 @@ environment = ExtResource("2")
 transform = Transform3D(-0.422618, -0.694272, 0.582563, 0, 0.642788, 0.766044, -0.906308, 0.323744, -0.271654, 0, 0, 0)
 shadow_enabled = true
 
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" parent="Level" instance=ExtResource("3")]
+transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1.5, 0, -0.5, 0)
+
+[node name="WallA" parent="Level" instance=ExtResource("4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -10)
+
+[node name="WallB" parent="Level" instance=ExtResource("4")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1, 10)
+
+[node name="WallC" parent="Level" instance=ExtResource("5")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -12, 1.5, 0)
+
+[node name="WallD" parent="Level" instance=ExtResource("5")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 12, 1.5, 0)
 [node name="CityGeometry" type="Node3D" parent="."]
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
 [node name="Spawn1" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, -4)
+
+[node name="Spawn2" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 4)
+
+[node name="Spawn3" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, 4)
+
+[node name="Spawn4" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, -4)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.5, -12)
 
 [node name="Spawn2" type="Marker3D" parent="SpawnPoints"]
@@ -34,12 +67,17 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.5, -12)
 [node name="Status" type="Label" parent="HUD"]
 offset_left = 24.0
 offset_top = 24.0
+offset_right = 400.0
+offset_bottom = 64.0
 offset_right = 650.0
 offset_bottom = 80.0
 text = ""
 
 [node name="Leave" type="Button" parent="HUD"]
 offset_left = 24.0
+offset_top = 70.0
+offset_right = 170.0
+offset_bottom = 110.0
 offset_top = 84.0
 offset_right = 190.0
 offset_bottom = 124.0

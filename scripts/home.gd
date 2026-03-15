@@ -63,6 +63,7 @@ func _on_level_three_pressed() -> void:
 func _on_host_lobby_pressed() -> void:
 	var ok := NetworkManager.start_host(int(host_port.value), int(host_max_players.value), host_password.text)
 	if !ok:
+		status_label.text = "Failed to host lobby. Check port and try again."
 		status_label.text = "Failed to host server. Check port and try again."
 	else:
 		status_label.text = "Server launched. Share your IP/domain + port to join online."
@@ -70,9 +71,11 @@ func _on_host_lobby_pressed() -> void:
 func _on_join_lobby_pressed() -> void:
 	var address_text := join_address.text.strip_edges()
 	if address_text.is_empty():
+		status_label.text = "Enter a host URL/IP first (example: 192.168.1.20)."
 		status_label.text = "Enter a host domain/IP first (example: fps.example.com or 192.168.1.20)."
 		return
 
 	var ok := NetworkManager.join_server(address_text, int(join_port.value), join_password.text)
 	if !ok:
+		status_label.text = "Failed to join lobby."
 		status_label.text = "Failed to join server."

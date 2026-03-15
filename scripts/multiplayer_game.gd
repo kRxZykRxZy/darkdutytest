@@ -1,6 +1,8 @@
 extends Node3D
 
 const PLAYER_SCENE := preload("res://objects/network_player.tscn")
+
+var players: Dictionary = {}
 const TEAM_NAMES := ["SHELLSHOCKERS", "RUSHTEAM"]
 
 var players: Dictionary = {}
@@ -20,6 +22,7 @@ func _ready() -> void:
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 
 	if multiplayer.is_server():
+		status_label.text = "Hosting lobby..."
 		status_label.text = "Hosting lobby... Team mode: Shellshockers vs Rushteam"
 		_spawn_player(multiplayer.get_unique_id())
 	else:
@@ -43,6 +46,7 @@ func _spawn_player(peer_id: int) -> void:
 	add_child(instance)
 	var spawn = spawn_points.get_child(peer_id % max(1, spawn_points.get_child_count()))
 	instance.global_position = spawn.global_position
+	instance.configure(peer_id == multiplayer.get_unique_id())
 	instance.configure(peer_id == multiplayer.get_unique_id(), _team_for_peer(peer_id))
 	players[peer_id] = instance
 
@@ -56,6 +60,7 @@ func _remove_player(peer_id: int) -> void:
 func _on_peer_connected(_id: int) -> void:
 	if multiplayer.is_server():
 		for peer_id in players.keys():
+			_sync_existing_player.rpc_id(_id, peer_id)
 			_sync_existing_player.rpc_id(_id, peer_id, _team_for_peer(peer_id))
 
 func _on_peer_disconnected(id: int) -> void:
@@ -68,6 +73,11 @@ func _request_spawn(peer_id: int, password: String) -> void:
 	if NetworkManager.server_password != "" and NetworkManager.server_password != password:
 		_kick_with_error.rpc_id(peer_id, "Wrong password")
 		return
+	_spawn_player(peer_id)
+	_sync_existing_player.rpc(peer_id)
+
+@rpc("any_peer", "call_local")
+func _sync_existing_player(peer_id: int) -> void:
 	var team := _team_for_peer(peer_id)
 	_spawn_player(peer_id)
 	_sync_existing_player.rpc(peer_id, team)
