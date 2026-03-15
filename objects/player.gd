@@ -21,22 +21,15 @@ var is_scoping := false
 var mouse_sensitivity = 700
 var gamepad_sensitivity := 0.075
 
-var mouse_captured := true
-
 var movement_velocity: Vector3
 var rotation_target: Vector3
-
 var input_mouse: Vector2
 
 var health: int = 100
 var gravity := 0.0
-
-var previously_floored := false
-
 var jumps_remaining: int
 
 var container_offset = Vector3(1.2, -1.1, -2.75)
-
 var tween: Tween
 
 signal health_updated
@@ -54,6 +47,7 @@ signal loadout_updated
 
 @export var crosshair: TextureRect
 
+
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -62,243 +56,150 @@ func _ready():
 		reserve_ammo.append(item.reserve_ammo)
 
 	weapon = weapons[weapon_index]
-	initiate_change_weapon(weapon_index)
+	change_weapon()
+
 	health_updated.emit(health)
 	loadout_updated.emit(_get_loadout_lines())
 	_emit_ammo()
 
+
+# --------------------------------------------------
+# MAIN LOOP
+# --------------------------------------------------
+
 func _process(delta):
-	handle_controls(delta)
 	handle_gravity(delta)
 
-	var applied_velocity: Vector3
-	movement_velocity = transform.basis * movement_velocity
+	velocity = velocity.lerp(movement_velocity, delta * 10)
+	velocity.y = -gravity
 
-	applied_velocity = velocity.lerp(movement_velocity, delta * 10)
-	applied_velocity.y = -gravity
-
-	velocity = applied_velocity
 	move_and_slide()
 
-	container.position = lerp(container.position, container_offset - (basis.inverse() * applied_velocity / 30), delta * 10)
 
-	sound_footsteps.stream_paused = true
-
-	if is_on_floor():
-		if abs(velocity.x) > 1 or abs(velocity.z) > 1:
-			sound_footsteps.stream_paused = false
-
-	camera.position.y = lerp(camera.position.y, 0.0, delta * 5)
-
-	if is_on_floor() and gravity > 1 and !previously_floored:
-		Audio.play("sounds/land.ogg")
-		camera.position.y = -0.1
-
-	previously_floored = is_on_floor()
-
-	if position.y < -10:
-		get_tree().reload_current_scene()
+# --------------------------------------------------
+# INPUT
+# --------------------------------------------------
 
 func _input(event):
-	if event is InputEventMouseMotion and mouse_captured:
-		input_mouse = event.relative / mouse_sensitivity
-		handle_rotation(event.relative.x, event.relative.y, false)
+	if event is InputEventMouseMotion:
+		handle_rotation(event.relative.x, event.relative.y)
 
-func handle_controls(delta):
-	if Input.is_action_just_pressed("mouse_capture"):
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		mouse_captured = true
 
-	if Input.is_action_just_pressed("mouse_capture_exit"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		mouse_captured = false
-		input_mouse = Vector2.ZERO
-
-	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	movement_velocity = Vector3(input.x, 0, input.y).normalized() * movement_speed
-
-	var rotation_input := Input.get_vector("camera_right", "camera_left", "camera_down", "camera_up")
-	if rotation_input:
-		handle_rotation(rotation_input.x, rotation_input.y, true, delta)
-
-	action_scope()
-	action_reload()
-	action_shoot()
-
-	if Input.is_action_just_pressed("jump"):
-		if jumps_remaining:
-			action_jump()
-
-	action_weapon_toggle()
-	action_weapon_slots()
-	action_heal()
-
-func handle_rotation(xRot: float, yRot: float, isController: bool, delta: float = 0.0):
-	if isController:
-		rotation_target -= Vector3(-yRot, -xRot, 0).limit_length(1.0) * gamepad_sensitivity
-		rotation_target.x = clamp(rotation_target.x, deg_to_rad(-90), deg_to_rad(90))
-		camera.rotation.x = lerp_angle(camera.rotation.x, rotation_target.x, delta * 25)
-		rotation.y = lerp_angle(rotation.y, rotation_target.y, delta * 25)
-	else:
-		rotation_target += (Vector3(-yRot, -xRot, 0) / mouse_sensitivity)
-		rotation_target.x = clamp(rotation_target.x, deg_to_rad(-90), deg_to_rad(90))
-		camera.rotation.x = rotation_target.x
-		rotation.y = rotation_target.y
+# --------------------------------------------------
+# MOVEMENT
+# --------------------------------------------------
 
 func handle_gravity(delta):
 	gravity += 20 * delta
 
-	if gravity < 0 and is_on_ceiling():
+	if is_on_floor():
 		gravity = 0
-
-	if gravity > 0 and is_on_floor():
 		jumps_remaining = number_of_jumps
-		gravity = 0
+
+
+func handle_rotation(xRot: float, yRot: float):
+	rotation_target += Vector3(-yRot, -xRot, 0) / mouse_sensitivity
+	rotation_target.x = clamp(rotation_target.x, deg_to_rad(-90), deg_to_rad(90))
+
+	camera.rotation.x = rotation_target.x
+	rotation.y = rotation_target.y
+
 
 func action_jump():
-	Audio.play("sounds/jump_a.ogg, sounds/jump_b.ogg, sounds/jump_c.ogg")
+	if jumps_remaining <= 0:
+		return
+
 	gravity = -jump_strength
 	jumps_remaining -= 1
 
-func action_scope() -> void:
-	is_scoping = Input.is_action_pressed("scope")
-	camera.fov = lerp(camera.fov, weapon.scope_fov if is_scoping else 80.0, 0.2)
-	if crosshair:
-		crosshair.visible = !is_scoping
 
-func action_reload() -> void:
-	if !Input.is_action_just_pressed("reload"):
-		return
-	if is_reloading:
-		return
-	if current_ammo[weapon_index] >= weapon.magazine_size:
-		return
-	if reserve_ammo[weapon_index] <= 0:
-		return
-
-	is_reloading = true
-	reload_timer.start(weapon.reload_time)
+# --------------------------------------------------
+# SHOOTING
+# --------------------------------------------------
 
 func action_shoot():
 	if is_reloading:
 		return
-	if Input.is_action_pressed("shoot"):
-		if !blaster_cooldown.is_stopped():
-			return
-		if current_ammo[weapon_index] <= 0:
-			return
 
-		current_ammo[weapon_index] -= 1
-		_emit_ammo()
+	if !blaster_cooldown.is_stopped():
+		return
 
-		Audio.play(weapon.sound_shoot)
-		muzzle.play("default")
-		muzzle.rotation_degrees.z = randf_range(-45, 45)
-		muzzle.scale = Vector3.ONE * randf_range(0.40, 0.75)
-		muzzle.position = container.position - weapon.muzzle_position
-		blaster_cooldown.start(weapon.cooldown)
+	if current_ammo[weapon_index] <= 0:
+		return
 
-		for n in weapon.shot_count:
-			raycast.target_position.x = randf_range(-weapon.spread, weapon.spread)
-			raycast.target_position.y = randf_range(-weapon.spread, weapon.spread)
-			raycast.force_raycast_update()
-			if !raycast.is_colliding():
-				continue
+	current_ammo[weapon_index] -= 1
+	_emit_ammo()
+
+	blaster_cooldown.start(weapon.cooldown)
+
+	for i in weapon.shot_count:
+		raycast.target_position.x = randf_range(-weapon.spread, weapon.spread)
+		raycast.target_position.y = randf_range(-weapon.spread, weapon.spread)
+		raycast.force_raycast_update()
+
+		if raycast.is_colliding():
 			var collider = raycast.get_collider()
+
 			if collider.has_method("damage"):
 				collider.damage(weapon.damage)
 
-			var impact = preload("res://objects/impact.tscn")
-			var impact_instance = impact.instantiate()
-			impact_instance.play("shot")
-			get_tree().root.add_child(impact_instance)
-			impact_instance.position = raycast.get_collision_point() + (raycast.get_collision_normal() / 10)
-			impact_instance.look_at(camera.global_transform.origin, Vector3.UP, true)
+	# Knockback
+	movement_velocity += Vector3(0, 0, weapon.knockback)
 
-		var knockback = random_vec2(weapon.min_knockback, weapon.max_knockback)
-		container.position.z += 0.25
-		camera.rotation.x += knockback.x
-		rotation.y += knockback.y
-		rotation_target.x += knockback.x
-		rotation_target.y += knockback.y
-		movement_velocity += Vector3(0, 0, weapon.knockback)
 
-func action_weapon_toggle():
-	var delta := 0
-	if Input.is_action_just_pressed("weapon_toggle") or Input.is_action_just_pressed("weapon_next"):
-		delta = 1
-	elif Input.is_action_just_pressed("weapon_prev"):
-		delta = -1
-
-	if delta == 0:
-		return
-
-	var next_index = wrap(weapon_index + delta, 0, weapons.size())
-	initiate_change_weapon(next_index)
-	Audio.play("sounds/weapon_change.ogg")
-
-func action_weapon_slots():
-	var slot_actions := ["weapon_slot_1", "weapon_slot_2", "weapon_slot_3", "weapon_slot_4", "weapon_slot_5"]
-	for idx in slot_actions.size():
-		if Input.is_action_just_pressed(slot_actions[idx]) and idx < weapons.size():
-			if idx != weapon_index:
-				initiate_change_weapon(idx)
-				Audio.play("sounds/weapon_change.ogg")
-
-func action_heal():
-	if !Input.is_action_just_pressed("heal"):
-		return
-	if medkits <= 0 or health >= 100:
-		return
-	if !heal_timer.is_stopped():
-		return
-
-	medkits -= 1
-	health = min(100, health + heal_per_medkit)
-	heal_timer.start(heal_cooldown_seconds)
-	health_updated.emit(health)
-	loadout_updated.emit(_get_loadout_lines())
-
-func initiate_change_weapon(index):
-	weapon_index = index
-	if container.get_child_count() == 0:
-		change_weapon()
-		return
-
-	tween = get_tree().create_tween()
-	tween.set_ease(Tween.EASE_OUT_IN)
-	tween.tween_property(container, "position", container_offset - Vector3(0, 1, 0), 0.1)
-	tween.tween_callback(change_weapon)
+# --------------------------------------------------
+# WEAPON SYSTEM
+# --------------------------------------------------
 
 func change_weapon():
 	weapon = weapons[weapon_index]
 
-	for n in container.get_children():
-		container.remove_child(n)
-		n.queue_free()
+	for child in container.get_children():
+		child.queue_free()
 
 	var weapon_model = weapon.model.instantiate()
 	container.add_child(weapon_model)
+
+	# Allow weapon to configure itself
+	if weapon.has_method("configure_model"):
+		weapon.configure_model(weapon_model)
+
+	if weapon.has_method("configure_aiming"):
+		weapon.configure_aiming(self)
+
 	_emit_ammo()
 
-func damage(amount: int) -> void:
-	health = max(0, health - amount)
+
+# --------------------------------------------------
+# DAMAGE SYSTEM
+# --------------------------------------------------
+
+func damage(amount: float) -> void:
+	health = max(0, health - int(amount))
 	health_updated.emit(health)
+
 	if health <= 0:
 		get_tree().reload_current_scene()
 
-func _on_reload_timer_timeout() -> void:
-	if !is_reloading:
-		return
-	var needed = weapon.magazine_size - current_ammo[weapon_index]
-	var amount = min(needed, reserve_ammo[weapon_index])
-	current_ammo[weapon_index] += amount
-	reserve_ammo[weapon_index] -= amount
-	is_reloading = false
-	_emit_ammo()
 
-func _emit_ammo() -> void:
-	ammo_updated.emit(current_ammo[weapon_index], reserve_ammo[weapon_index], weapon.weapon_name)
+# --------------------------------------------------
+# HELPERS
+# --------------------------------------------------
+
+func random_vec2(min: Vector2, max: Vector2) -> Vector2:
+	return Vector2(
+		randf_range(min.x, max.x),
+		randf_range(min.y, max.y)
+	)
+
+
+func _emit_ammo():
+	ammo_updated.emit(
+		current_ammo[weapon_index],
+		reserve_ammo[weapon_index],
+		weapon.weapon_name
+	)
+
 
 func _get_loadout_lines() -> Array[String]:
 	return [
@@ -308,6 +209,6 @@ func _get_loadout_lines() -> Array[String]:
 		"4 Grenade Launcher",
 		"5 Sniper",
 		"Mouse Wheel: Switch",
-		"R: Reload  | Right Click: Scope",
-		"H: Heal (%d kits)" % medkits
+		"R: Reload | Right Click: Scope",
+		"H: Heal"
 	]
