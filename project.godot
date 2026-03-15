@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Starter Kit FPS"
 config/tags=PackedStringArray("starterkit")
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/home.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 boot_splash/bg_color=Color(0.92549, 0.92549, 0.960784, 1)
 boot_splash/image="res://splash-screen.png"
@@ -25,6 +25,7 @@ config/icon="res://icon.png"
 [autoload]
 
 Audio="*res://scripts/audio.gd"
+NetworkManager="*res://scripts/network_manager.gd"
 
 [display]
 
