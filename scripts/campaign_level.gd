@@ -3,9 +3,12 @@ extends Node3D
 @export_file("*.tscn") var next_level_path := ""
 @export var intro_text := ""
 @export var additional_enemy_positions: Array[Vector3] = []
+@export var reinforcements_delay := 15.0
 
 @onready var enemies: Node = $Enemies
 @onready var hud: CanvasLayer = $HUD
+
+var reinforcements_spawned := false
 
 func _ready() -> void:
 	_spawn_extra_enemies()
@@ -14,6 +17,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_update_status_label()
+	if !reinforcements_spawned and enemies.get_child_count() <= 2 and !additional_enemy_positions.is_empty():
+		reinforcements_spawned = true
+		_spawn_reinforcements()
 	if enemies.get_child_count() == 0:
 		if next_level_path.is_empty():
 			_show_campaign_complete()
@@ -32,6 +38,12 @@ func _spawn_extra_enemies() -> void:
 		enemies.add_child(enemy)
 		if enemy.has_node("RayCast"):
 			enemy.get_node("RayCast").target_position = Vector3(0, 0, -12)
+
+func _spawn_reinforcements() -> void:
+	var label: Label = hud.get_node("Objective")
+	label.text = "%s\nReinforcements incoming..." % intro_text
+	await get_tree().create_timer(reinforcements_delay / 8.0).timeout
+	_spawn_extra_enemies()
 
 func _ensure_status_label() -> void:
 	if hud.has_node("Objective"):

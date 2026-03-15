@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Weapon" load_steps=4 format=3]
+
+[ext_resource type="Texture2D" uid="uid://ce3lgq7foiusl" path="res://sprites/crosshair-repeater.png" id="1_cross"]
+[ext_resource type="Script" uid="uid://dg01pkkc1c5vd" path="res://scripts/weapon.gd" id="2_weapon"]
+[ext_resource type="PackedScene" uid="uid://dd3oln1ucgqpd" path="res://models/blaster-repeater.glb" id="3_model"]
+
+[resource]
+script = ExtResource("2_weapon")
+weapon_name = "Assault Rifle"
+model = ExtResource("3_model")
+rotation = Vector3(0, 180, 0)
+muzzle_position = Vector3(0.1, -0.4, 1.5)
+cooldown = 0.11
+damage = 16.0
+spread = 0.55
+shot_count = 1
+knockback = 8
+min_knockback = Vector2(0.004, 0.003)
+max_knockback = Vector2(0.012, 0.008)
+magazine_size = 30
+reserve_ammo = 120
+reload_time = 1.25
+scope_fov = 42.0
+sound_shoot = "sounds/blaster_repeater.ogg"
+crosshair = ExtResource("1_cross")

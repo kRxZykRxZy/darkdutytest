@@ -6,6 +6,7 @@
 
 [resource]
 script = ExtResource("3_weapon")
+weapon_name = "RPG"
 model = ExtResource("2_model")
 rotation = Vector3(0, 180, 0)
 muzzle_position = Vector3(0.15, -0.35, 1.4)
@@ -17,5 +18,9 @@ shot_count = 1
 knockback = 45
 min_knockback = Vector2(0.05, 0.03)
 max_knockback = Vector2(0.08, 0.06)
+magazine_size = 1
+reserve_ammo = 8
+reload_time = 1.8
+scope_fov = 50.0
 sound_shoot = "sounds/blaster.ogg"
 crosshair = ExtResource("1_cross")
