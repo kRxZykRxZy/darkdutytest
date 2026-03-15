@@ -1,5 +1,8 @@
 extends CharacterBody3D
 
+const VEHICLE_INTERACTION_RANGE := 4.0
+const VEHICLE_EXIT_OFFSET := 2.2
+
 @export_subgroup("Properties")
 @export var movement_speed = 5
 @export_range(0, 100) var number_of_jumps: int = 2
@@ -363,13 +366,13 @@ func action_vehicle_exit() -> void:
 	active_vehicle = null
 	vehicle_seat = ""
 	gravity = 0.0
-	var exit_pos := current_vehicle.global_transform.origin + current_vehicle.transform.basis.x * 2.2
+	var exit_pos := current_vehicle.global_transform.origin + current_vehicle.transform.basis.x * VEHICLE_EXIT_OFFSET
 	global_position = exit_pos
 
 
 func _find_nearby_vehicle() -> Vehicle:
 	var nearest: Vehicle = null
-	var best_dist := 1000000.0
+	var best_dist := INF
 	for node in get_tree().get_nodes_in_group("drivable_vehicle"):
 		var candidate := node as Vehicle
 		if candidate == null:
@@ -377,7 +380,7 @@ func _find_nearby_vehicle() -> Vehicle:
 		if !candidate.has_seat_for(self):
 			continue
 		var distance := global_position.distance_to(candidate.global_position)
-		if distance < 4.0 and distance < best_dist:
+		if distance < VEHICLE_INTERACTION_RANGE and distance < best_dist:
 			best_dist = distance
 			nearest = candidate
 	return nearest
