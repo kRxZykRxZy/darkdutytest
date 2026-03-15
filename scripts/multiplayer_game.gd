@@ -2,9 +2,21 @@ extends Node3D
 
 const PLAYER_SCENE := preload("res://objects/network_player.tscn")
 const TEAM_NAMES: Array[String] = ["SHELLSHOCKERS", "RUSHTEAM"]
+const WEAPON_PATHS := [
+	"res://weapons/rpg.tres",
+	"res://weapons/assault_rifle.tres",
+	"res://weapons/shotgun.tres",
+	"res://weapons/grenade_launcher.tres",
+	"res://weapons/sniper.tres",
+	"res://weapons/lmg.tres",
+	"res://weapons/smg.tres",
+	"res://weapons/battle_rifle.tres"
+]
 
 var players: Dictionary = {}
 var peer_teams: Dictionary = {}
+var multiplayer_weapons: Array[Weapon] = []
+var multiplayer_weapon_index := 0
 
 @onready var spawn_points: Node3D = $SpawnPoints
 @onready var status_label: Label = $HUD/Status
@@ -16,7 +28,8 @@ func _ready() -> void:
 		return
 
 	_build_war_city()
-	loadout_label.text = "1 RPG  2 Assault  3 Shotgun  4 Grenade  5 Sniper\n+ LMG + SMG + Battle Rifle\nMouse Wheel: Switch  |  R Reload  |  RMB Scope  |  H Heal"
+	_load_multiplayer_weapons()
+	_update_multiplayer_loadout_ui()
 
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
@@ -90,6 +103,69 @@ func _kick_with_error(reason: String) -> void:
 func _on_leave_pressed() -> void:
 	NetworkManager.shutdown_network()
 	get_tree().change_scene_to_file("res://scenes/home.tscn")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if multiplayer_weapons.is_empty():
+		return
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+			_set_multiplayer_weapon_index((multiplayer_weapon_index - 1 + multiplayer_weapons.size()) % multiplayer_weapons.size())
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+			_set_multiplayer_weapon_index((multiplayer_weapon_index + 1) % multiplayer_weapons.size())
+	if Input.is_action_just_pressed("weapon_toggle") or Input.is_action_just_pressed("weapon_next"):
+		_set_multiplayer_weapon_index((multiplayer_weapon_index + 1) % multiplayer_weapons.size())
+	if Input.is_action_just_pressed("weapon_prev"):
+		_set_multiplayer_weapon_index((multiplayer_weapon_index - 1 + multiplayer_weapons.size()) % multiplayer_weapons.size())
+	if Input.is_action_just_pressed("weapon_slot_1"):
+		_set_multiplayer_weapon_index(0)
+	if Input.is_action_just_pressed("weapon_slot_2"):
+		_set_multiplayer_weapon_index(1)
+	if Input.is_action_just_pressed("weapon_slot_3"):
+		_set_multiplayer_weapon_index(2)
+	if Input.is_action_just_pressed("weapon_slot_4"):
+		_set_multiplayer_weapon_index(3)
+	if Input.is_action_just_pressed("weapon_slot_5"):
+		_set_multiplayer_weapon_index(4)
+
+func _load_multiplayer_weapons() -> void:
+	multiplayer_weapons.clear()
+	for weapon_path in WEAPON_PATHS:
+		var weapon_resource := load(weapon_path) as Weapon
+		if weapon_resource != null:
+			multiplayer_weapons.append(weapon_resource)
+	multiplayer_weapon_index = 0
+
+func _set_multiplayer_weapon_index(index: int) -> void:
+	if index < 0 or index >= multiplayer_weapons.size():
+		return
+	multiplayer_weapon_index = index
+	_update_multiplayer_loadout_ui()
+
+func _update_multiplayer_loadout_ui() -> void:
+	var lines: Array[String] = []
+	for i: int in range(multiplayer_weapons.size()):
+		var prefix := ">"
+		if i != multiplayer_weapon_index:
+			prefix = str(i + 1) if i < 5 else "-"
+		lines.append("%s %s" % [prefix, multiplayer_weapons[i].weapon_name])
+	lines.append("Mouse Wheel / E: Switch")
+	loadout_label.text = "\n".join(lines)
+
+	var weapon_image_rect := get_node_or_null("HUD/WeaponImage") as TextureRect
+	if weapon_image_rect == null:
+		weapon_image_rect = TextureRect.new()
+		weapon_image_rect.name = "WeaponImage"
+		weapon_image_rect.offset_left = 970
+		weapon_image_rect.offset_top = 86
+		weapon_image_rect.offset_right = 1040
+		weapon_image_rect.offset_bottom = 156
+		weapon_image_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		weapon_image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		$HUD.add_child(weapon_image_rect)
+	if multiplayer_weapons.is_empty():
+		weapon_image_rect.texture = null
+		return
+	weapon_image_rect.texture = multiplayer_weapons[multiplayer_weapon_index].crosshair
 
 func _build_war_city() -> void:
 	for child in $CityGeometry.get_children():

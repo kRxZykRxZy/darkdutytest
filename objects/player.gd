@@ -84,7 +84,7 @@ func _ready():
 # MAIN LOOP
 # --------------------------------------------------
 
-func _process(delta):
+func _physics_process(delta):
 	_update_actions()
 	_update_vehicle(delta)
 	if active_vehicle:
@@ -420,7 +420,8 @@ func _emit_ammo():
 	ammo_updated.emit(
 		current_ammo[weapon_index],
 		reserve_ammo[weapon_index],
-		weapon.weapon_name
+		weapon.weapon_name,
+		weapon.crosshair
 	)
 
 
