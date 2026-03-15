@@ -26,8 +26,7 @@ func _ready() -> void:
 		_spawn_player(multiplayer.get_unique_id())
 	else:
 		status_label.text = "Connected to lobby"
-
-	_request_spawn.rpc_id(1, multiplayer.get_unique_id(), NetworkManager.requested_password)
+		_request_spawn.rpc_id(1, multiplayer.get_unique_id(), NetworkManager.requested_password)
 
 func _team_for_peer(peer_id: int) -> String:
 	if peer_teams.has(peer_id):
