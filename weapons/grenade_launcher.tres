@@ -6,6 +6,7 @@
 
 [resource]
 script = ExtResource("3_weapon")
+weapon_name = "Grenade Launcher"
 model = ExtResource("2_model")
 rotation = Vector3(0, 180, 0)
 muzzle_position = Vector3(0.1, -0.4, 1.5)
@@ -17,5 +18,9 @@ shot_count = 1
 knockback = 30
 min_knockback = Vector2(0.03, 0.02)
 max_knockback = Vector2(0.05, 0.04)
+magazine_size = 5
+reserve_ammo = 20
+reload_time = 1.6
+scope_fov = 52.0
 sound_shoot = "sounds/blaster_repeater.ogg"
 crosshair = ExtResource("1_cross")

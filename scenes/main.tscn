@@ -154,3 +154,6 @@ transform = Transform3D(1.73205, 0, 1, 0, 2, 0, -1, 0, 1.73205, -30.1261, 2.4268
 transform = Transform3D(1.12202, 1.39419, -2.40776, 1.53922, 1.85165, 1.78946, 2.31773, -1.90463, -0.0227883, -0.881504, 13.0297, -30.1859)
 
 [connection signal="health_updated" from="Player" to="HUD" method="_on_health_updated"]
+[connection signal="ammo_updated" from="Player" to="HUD" method="_on_ammo_updated"]
+[connection signal="loadout_updated" from="Player" to="HUD" method="_on_loadout_updated"]
+

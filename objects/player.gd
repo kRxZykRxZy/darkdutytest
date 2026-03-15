@@ -9,9 +9,14 @@ extends CharacterBody3D
 @export var weapons: Array[Weapon] = []
 @export_range(0, 5) var medkits: int = 2
 @export_range(1, 100) var heal_per_medkit: int = 35
+@export_range(1, 30) var heal_cooldown_seconds: float = 8.0
 
 var weapon: Weapon
 var weapon_index := 0
+var current_ammo: Array[int] = []
+var reserve_ammo: Array[int] = []
+var is_reloading := false
+var is_scoping := false
 
 var mouse_sensitivity = 700
 var gamepad_sensitivity := 0.075
@@ -35,6 +40,8 @@ var container_offset = Vector3(1.2, -1.1, -2.75)
 var tween: Tween
 
 signal health_updated
+signal ammo_updated
+signal loadout_updated
 
 @onready var camera = $Head/Camera
 @onready var raycast = $Head/Camera/RayCast
@@ -42,17 +49,23 @@ signal health_updated
 @onready var container = $Head/Camera/SubViewportContainer/SubViewport/CameraItem/Container
 @onready var sound_footsteps = $SoundFootsteps
 @onready var blaster_cooldown = $Cooldown
+@onready var reload_timer: Timer = $ReloadTimer
+@onready var heal_timer: Timer = $HealTimer
 
 @export var crosshair: TextureRect
-
-# Functions
 
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-	weapon = weapons[weapon_index] # Weapon must never be nil
+	for item in weapons:
+		current_ammo.append(item.magazine_size)
+		reserve_ammo.append(item.reserve_ammo)
+
+	weapon = weapons[weapon_index]
 	initiate_change_weapon(weapon_index)
 	health_updated.emit(health)
+	loadout_updated.emit(_get_loadout_lines())
+	_emit_ammo()
 
 func _process(delta):
 	handle_controls(delta)
@@ -62,7 +75,7 @@ func _process(delta):
 	movement_velocity = transform.basis * movement_velocity
 
 	applied_velocity = velocity.lerp(movement_velocity, delta * 10)
-	applied_velocity.y = - gravity
+	applied_velocity.y = -gravity
 
 	velocity = applied_velocity
 	move_and_slide()
@@ -108,6 +121,8 @@ func handle_controls(delta):
 	if rotation_input:
 		handle_rotation(rotation_input.x, rotation_input.y, true, delta)
 
+	action_scope()
+	action_reload()
 	action_shoot()
 
 	if Input.is_action_just_pressed("jump"):
@@ -142,13 +157,39 @@ func handle_gravity(delta):
 
 func action_jump():
 	Audio.play("sounds/jump_a.ogg, sounds/jump_b.ogg, sounds/jump_c.ogg")
-	gravity = - jump_strength
+	gravity = -jump_strength
 	jumps_remaining -= 1
 
+func action_scope() -> void:
+	is_scoping = Input.is_action_pressed("scope")
+	camera.fov = lerp(camera.fov, weapon.scope_fov if is_scoping else 80.0, 0.2)
+	if crosshair:
+		crosshair.visible = !is_scoping
+
+func action_reload() -> void:
+	if !Input.is_action_just_pressed("reload"):
+		return
+	if is_reloading:
+		return
+	if current_ammo[weapon_index] >= weapon.magazine_size:
+		return
+	if reserve_ammo[weapon_index] <= 0:
+		return
+
+	is_reloading = true
+	reload_timer.start(weapon.reload_time)
+
 func action_shoot():
+	if is_reloading:
+		return
 	if Input.is_action_pressed("shoot"):
 		if !blaster_cooldown.is_stopped():
 			return
+		if current_ammo[weapon_index] <= 0:
+			return
+
+		current_ammo[weapon_index] -= 1
+		_emit_ammo()
 
 		Audio.play(weapon.sound_shoot)
 		muzzle.play("default")
@@ -183,13 +224,21 @@ func action_shoot():
 		movement_velocity += Vector3(0, 0, weapon.knockback)
 
 func action_weapon_toggle():
-	if Input.is_action_just_pressed("weapon_toggle"):
-		weapon_index = wrap(weapon_index + 1, 0, weapons.size())
-		initiate_change_weapon(weapon_index)
-		Audio.play("sounds/weapon_change.ogg")
+	var delta := 0
+	if Input.is_action_just_pressed("weapon_toggle") or Input.is_action_just_pressed("weapon_next"):
+		delta = 1
+	elif Input.is_action_just_pressed("weapon_prev"):
+		delta = -1
+
+	if delta == 0:
+		return
+
+	var next_index = wrap(weapon_index + delta, 0, weapons.size())
+	initiate_change_weapon(next_index)
+	Audio.play("sounds/weapon_change.ogg")
 
 func action_weapon_slots():
-	var slot_actions := ["weapon_slot_1", "weapon_slot_2", "weapon_slot_3", "weapon_slot_4"]
+	var slot_actions := ["weapon_slot_1", "weapon_slot_2", "weapon_slot_3", "weapon_slot_4", "weapon_slot_5"]
 	for idx in slot_actions.size():
 		if Input.is_action_just_pressed(slot_actions[idx]) and idx < weapons.size():
 			if idx != weapon_index:
@@ -197,16 +246,18 @@ func action_weapon_slots():
 				Audio.play("sounds/weapon_change.ogg")
 
 func action_heal():
-	if !Input.is_action_just_pressed("weapon_slot_5"):
+	if !Input.is_action_just_pressed("heal"):
 		return
-	if medkits <= 0:
+	if medkits <= 0 or health >= 100:
 		return
-	if health >= 100:
+	if !heal_timer.is_stopped():
 		return
 
 	medkits -= 1
 	health = min(100, health + heal_per_medkit)
+	heal_timer.start(heal_cooldown_seconds)
 	health_updated.emit(health)
+	loadout_updated.emit(_get_loadout_lines())
 
 func initiate_change_weapon(index):
 	weapon_index = index
@@ -228,9 +279,35 @@ func change_weapon():
 
 	var weapon_model = weapon.model.instantiate()
 	container.add_child(weapon_model)
+	_emit_ammo()
 
 func damage(amount: int) -> void:
 	health = max(0, health - amount)
 	health_updated.emit(health)
 	if health <= 0:
 		get_tree().reload_current_scene()
+
+func _on_reload_timer_timeout() -> void:
+	if !is_reloading:
+		return
+	var needed = weapon.magazine_size - current_ammo[weapon_index]
+	var amount = min(needed, reserve_ammo[weapon_index])
+	current_ammo[weapon_index] += amount
+	reserve_ammo[weapon_index] -= amount
+	is_reloading = false
+	_emit_ammo()
+
+func _emit_ammo() -> void:
+	ammo_updated.emit(current_ammo[weapon_index], reserve_ammo[weapon_index], weapon.weapon_name)
+
+func _get_loadout_lines() -> Array[String]:
+	return [
+		"1 RPG",
+		"2 Assault Rifle",
+		"3 Shotgun",
+		"4 Grenade Launcher",
+		"5 Sniper",
+		"Mouse Wheel: Switch",
+		"R: Reload  | Right Click: Scope",
+		"H: Heal (%d kits)" % medkits
+	]

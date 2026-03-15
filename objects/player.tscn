@@ -1,12 +1,14 @@
 [gd_scene load_steps=9 format=3 uid="uid://dl2ed4gkybggf"]
 
 [ext_resource type="Script" uid="uid://cu47grjp072jk" path="res://objects/player.gd" id="1_ffboj"]
-[ext_resource type="Resource" uid="uid://cu2gtxlcmbb34" path="res://weapons/blaster-repeater.tres" id="2_6epbw"]
+[ext_resource type="Resource" path="res://weapons/assault_rifle.tres" id="2_assault"]
 [ext_resource type="Texture2D" uid="uid://8ggihh27mlrr" path="res://sprites/blob_shadow.png" id="2_b0fo8"]
 [ext_resource type="Script" uid="uid://dg01pkkc1c5vd" path="res://scripts/weapon.gd" id="2_i825w"]
 [ext_resource type="Resource" uid="uid://c56y8pqoyk15f" path="res://weapons/blaster.tres" id="3_kr4p8"]
 [ext_resource type="Resource" path="res://weapons/rpg.tres" id="6_rpg"]
-[ext_resource type="Resource" path="res://weapons/grenade_launcher.tres" id="7_grenade"]
+[ext_resource type="Resource" path="res://weapons/shotgun.tres" id="7_shotgun"]
+[ext_resource type="Resource" path="res://weapons/grenade_launcher.tres" id="8_grenade"]
+[ext_resource type="Resource" path="res://weapons/sniper.tres" id="9_sniper"]
 [ext_resource type="SpriteFrames" uid="uid://dbv3sy5qjatnl" path="res://sprites/burst_animation.tres" id="4_m6ukc"]
 [ext_resource type="AudioStream" uid="uid://cydjn1ct3hps2" path="res://sounds/walking.ogg" id="5_ics1s"]
 
@@ -17,7 +19,7 @@ height = 1.0
 [node name="Player" type="CharacterBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 script = ExtResource("1_ffboj")
-weapons = Array[ExtResource("2_i825w")]([ExtResource("3_kr4p8"), ExtResource("2_6epbw"), ExtResource("6_rpg"), ExtResource("7_grenade")])
+weapons = Array[ExtResource("2_i825w")]([ExtResource("6_rpg"), ExtResource("2_assault"), ExtResource("7_shotgun"), ExtResource("8_grenade"), ExtResource("9_sniper")])
 
 [node name="Collider" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
@@ -78,3 +80,11 @@ autoplay = true
 
 [node name="Cooldown" type="Timer" parent="."]
 one_shot = true
+
+[node name="ReloadTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="HealTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="ReloadTimer" to="." method="_on_reload_timer_timeout"]
