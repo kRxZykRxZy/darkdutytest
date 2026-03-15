@@ -19,9 +19,9 @@ func configure(is_local: bool, assigned_team: String = "SHELLSHOCKERS") -> void:
 	camera.current = is_local
 	team_label.text = assigned_team
 	if assigned_team == "RUSHTEAM":
-		body_mesh.modulate = Color(0.85, 0.25, 0.2, 1)
+		_set_body_color(Color(0.85, 0.25, 0.2, 1))
 	else:
-		body_mesh.modulate = Color(0.2, 0.5, 0.95, 1)
+		_set_body_color(Color(0.2, 0.5, 0.95, 1))
 	if is_local:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
@@ -63,3 +63,10 @@ func _send_transform(new_transform: Transform3D, head_x: float) -> void:
 		return
 	global_transform = new_transform
 	head.rotation.x = head_x
+
+func _set_body_color(color: Color) -> void:
+	var material := body_mesh.material_override as StandardMaterial3D
+	if material == null:
+		material = StandardMaterial3D.new()
+		body_mesh.material_override = material
+	material.albedo_color = color

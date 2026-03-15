@@ -26,7 +26,10 @@ func _on_health_updated(health):
 	$Health.text = str(health) + "%"
 
 func _on_ammo_updated(current: int, reserve: int, weapon_name: String) -> void:
-	$Ammo.text = "%s\n%d / %d" % [weapon_name, current, reserve]
+	var ammo_label := get_node_or_null("Ammo") as Label
+	if ammo_label == null:
+		return
+	ammo_label.text = "%s\n%d / %d" % [weapon_name, current, reserve]
 
 func _on_loadout_updated(lines: Array[String]) -> void:
 	$Loadout.text = "\n".join(lines)
