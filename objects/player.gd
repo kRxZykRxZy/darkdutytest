@@ -28,6 +28,7 @@ var input_mouse: Vector2
 var health: int = 100
 var gravity := 0.0
 var jumps_remaining: int
+var default_fov := 80.0
 
 var container_offset = Vector3(1.2, -1.1, -2.75)
 var tween: Tween
@@ -50,13 +51,20 @@ signal loadout_updated
 
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	default_fov = camera.fov
 
 	for item in weapons:
 		current_ammo.append(item.magazine_size)
 		reserve_ammo.append(item.reserve_ammo)
 
+	if weapons.is_empty():
+		push_error("Player has no weapons configured.")
+		return
+
 	weapon = weapons[weapon_index]
 	change_weapon()
+	if !heal_timer.timeout.is_connected(_on_heal_timer_timeout):
+		heal_timer.timeout.connect(_on_heal_timer_timeout)
 
 	health_updated.emit(health)
 	loadout_updated.emit(_get_loadout_lines())
@@ -68,7 +76,9 @@ func _ready():
 # --------------------------------------------------
 
 func _process(delta):
+	_update_actions()
 	handle_gravity(delta)
+	_update_movement()
 
 	velocity = velocity.lerp(movement_velocity, delta * 10)
 	velocity.y = -gravity
@@ -83,6 +93,11 @@ func _process(delta):
 func _input(event):
 	if event is InputEventMouseMotion:
 		handle_rotation(event.relative.x, event.relative.y)
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+			_set_weapon_index((weapon_index - 1 + weapons.size()) % weapons.size())
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+			_set_weapon_index((weapon_index + 1) % weapons.size())
 
 
 # --------------------------------------------------
@@ -113,6 +128,52 @@ func action_jump():
 	jumps_remaining -= 1
 
 
+func _update_movement() -> void:
+	var move_input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var move := (transform.basis * Vector3(move_input.x, 0, move_input.y)).normalized() * movement_speed
+	movement_velocity.x = move.x
+	movement_velocity.z = move.z
+
+
+func _update_actions() -> void:
+	if weapons.is_empty():
+		return
+
+	if Input.is_action_just_pressed("jump"):
+		action_jump()
+
+	if Input.is_action_pressed("shoot"):
+		action_shoot()
+
+	if Input.is_action_just_pressed("weapon_toggle") or Input.is_action_just_pressed("weapon_next"):
+		_set_weapon_index((weapon_index + 1) % weapons.size())
+
+	if Input.is_action_just_pressed("weapon_prev"):
+		_set_weapon_index((weapon_index - 1 + weapons.size()) % weapons.size())
+
+	if Input.is_action_just_pressed("weapon_slot_1"):
+		_set_weapon_index(0)
+	if Input.is_action_just_pressed("weapon_slot_2"):
+		_set_weapon_index(1)
+	if Input.is_action_just_pressed("weapon_slot_3"):
+		_set_weapon_index(2)
+	if Input.is_action_just_pressed("weapon_slot_4"):
+		_set_weapon_index(3)
+	if Input.is_action_just_pressed("weapon_slot_5"):
+		_set_weapon_index(4)
+
+	if Input.is_action_just_pressed("reload"):
+		action_reload()
+
+	if Input.is_action_pressed("scope"):
+		action_scope(true)
+	elif is_scoping:
+		action_scope(false)
+
+	if Input.is_action_just_pressed("heal"):
+		action_heal()
+
+
 # --------------------------------------------------
 # SHOOTING
 # --------------------------------------------------
@@ -130,6 +191,10 @@ func action_shoot():
 	current_ammo[weapon_index] -= 1
 	_emit_ammo()
 
+	if muzzle:
+		muzzle.frame = 0
+		muzzle.play("default")
+
 	blaster_cooldown.start(weapon.cooldown)
 
 	for i in weapon.shot_count:
@@ -144,15 +209,27 @@ func action_shoot():
 				collider.damage(weapon.damage)
 
 	# Knockback
-	movement_velocity += Vector3(0, 0, weapon.knockback)
+	movement_velocity -= transform.basis.z * weapon.knockback
+
+	if current_ammo[weapon_index] == 0 and reserve_ammo[weapon_index] > 0:
+		action_reload()
 
 
 # --------------------------------------------------
 # WEAPON SYSTEM
 # --------------------------------------------------
 
+func _set_weapon_index(index: int) -> void:
+	if index < 0 or index >= weapons.size() or index == weapon_index:
+		return
+	weapon_index = index
+	change_weapon()
+
+
 func change_weapon():
 	weapon = weapons[weapon_index]
+	is_scoping = false
+	camera.fov = default_fov
 
 	for child in container.get_children():
 		child.queue_free()
@@ -167,7 +244,56 @@ func change_weapon():
 	if weapon.has_method("configure_aiming"):
 		weapon.configure_aiming(self)
 
+	if crosshair and weapon.crosshair:
+		crosshair.texture = weapon.crosshair
+
 	_emit_ammo()
+	loadout_updated.emit(_get_loadout_lines())
+
+
+func action_reload() -> void:
+	if is_reloading:
+		return
+	var ammo_in_mag := current_ammo[weapon_index]
+	if ammo_in_mag >= weapon.magazine_size:
+		return
+	if reserve_ammo[weapon_index] <= 0:
+		return
+	is_reloading = true
+	reload_timer.start(weapon.reload_time)
+
+
+func _on_reload_timer_timeout() -> void:
+	if !is_reloading:
+		return
+	var ammo_needed := weapon.magazine_size - current_ammo[weapon_index]
+	var ammo_to_load := min(ammo_needed, reserve_ammo[weapon_index])
+	current_ammo[weapon_index] += ammo_to_load
+	reserve_ammo[weapon_index] -= ammo_to_load
+	is_reloading = false
+	_emit_ammo()
+
+
+func action_scope(enable: bool) -> void:
+	is_scoping = enable
+	camera.fov = weapon.scope_fov if enable else default_fov
+
+
+func action_heal() -> void:
+	if medkits <= 0:
+		return
+	if health >= 100:
+		return
+	if !heal_timer.is_stopped():
+		return
+	medkits -= 1
+	health = min(100, health + heal_per_medkit)
+	health_updated.emit(health)
+	heal_timer.start(heal_cooldown_seconds)
+
+
+func _on_heal_timer_timeout() -> void:
+	pass
 
 
 # --------------------------------------------------
@@ -202,13 +328,13 @@ func _emit_ammo():
 
 
 func _get_loadout_lines() -> Array[String]:
-	return [
-		"1 RPG",
-		"2 Assault Rifle",
-		"3 Shotgun",
-		"4 Grenade Launcher",
-		"5 Sniper",
-		"Mouse Wheel: Switch",
-		"R: Reload | Right Click: Scope",
-		"H: Heal"
-	]
+	var lines: Array[String] = []
+	for i in range(weapons.size()):
+		var prefix := str(i + 1)
+		if i >= 5:
+			prefix = "-"
+		lines.append("%s %s" % [prefix, weapons[i].weapon_name])
+	lines.append("Mouse Wheel / E: Switch")
+	lines.append("R: Reload | Right Click: Scope")
+	lines.append("H: Heal")
+	return lines

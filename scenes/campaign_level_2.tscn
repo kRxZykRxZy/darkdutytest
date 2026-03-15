@@ -21,8 +21,9 @@ outline_color = Color(0, 0, 0, 0.470588)
 [node name="Main" type="Node3D" unique_id=1176673032]
 script = ExtResource("11_campaign")
 next_level_path = "res://scenes/campaign_level_3.tscn"
-intro_text = "Wave two detected. Stay mobile."
-additional_enemy_positions = [Vector3(-18, 4, 4), Vector3(18, 4, -9), Vector3(0, 6, 15)]
+intro_text = "Operation Breakwater: hold the district and intercept reinforcements."
+additional_enemy_positions = [Vector3(-18, 4, 4), Vector3(18, 4, -9), Vector3(0, 6, 15), Vector3(-24, 6, -14), Vector3(22, 5, 14)]
+mission_stages = PackedStringArray("Hold the central square", "Disable AA emplacements", "Protect allied armor advance")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=529470734]
 environment = ExtResource("1_q8fpv")
@@ -161,4 +162,3 @@ transform = Transform3D(1.12202, 1.39419, -2.40776, 1.53922, 1.85165, 1.78946, 2
 [connection signal="health_updated" from="Player" to="HUD" method="_on_health_updated"]
 [connection signal="ammo_updated" from="Player" to="HUD" method="_on_ammo_updated"]
 [connection signal="loadout_updated" from="Player" to="HUD" method="_on_loadout_updated"]
-

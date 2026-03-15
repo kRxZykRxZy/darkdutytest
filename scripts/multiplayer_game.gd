@@ -16,7 +16,7 @@ func _ready() -> void:
 		return
 
 	_build_war_city()
-	loadout_label.text = "1 RPG  2 Assault  3 Shotgun  4 Grenade  5 Sniper\nMouse Wheel: Switch  |  R Reload  |  RMB Scope  |  H Heal"
+	loadout_label.text = "1 RPG  2 Assault  3 Shotgun  4 Grenade  5 Sniper\n+ LMG + SMG + Battle Rifle\nMouse Wheel: Switch  |  R Reload  |  RMB Scope  |  H Heal"
 
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
@@ -114,6 +114,12 @@ func _build_war_city() -> void:
 	_create_ramp(Vector3(-30, 0, 24), Vector3(18, 2, 8), 0.24)
 	_create_ramp(Vector3(30, 0, 22), Vector3(18, 2, 8), -0.24)
 
+	_create_vehicle(Vector3(-38, 0, 12), Color(0.26, 0.3, 0.24))
+	_create_vehicle(Vector3(35, 0, -14), Color(0.3, 0.26, 0.24))
+	_create_vehicle(Vector3(0, 0, 38), Color(0.24, 0.27, 0.22))
+	_create_helicopter(Vector3(-10, 10, -40))
+	_create_helicopter(Vector3(26, 12, 34))
+
 func _create_block(position: Vector3, size: Vector3, color: Color) -> void:
 	var body := StaticBody3D.new()
 	body.position = position
@@ -154,3 +160,17 @@ func _create_ramp(position: Vector3, size: Vector3, angle: float) -> void:
 	material.albedo_color = Color(0.25, 0.25, 0.3)
 	mesh_instance.material_override = material
 	body.add_child(mesh_instance)
+
+
+func _create_vehicle(position: Vector3, color: Color) -> void:
+	_create_block(position + Vector3(0, 0.8, 0), Vector3(4.8, 1.4, 2.6), color)
+	_create_block(position + Vector3(-0.8, 1.9, 0), Vector3(2.4, 1.0, 2.0), color.darkened(0.15))
+	_create_block(position + Vector3(2.0, 1.15, 0), Vector3(1.0, 0.45, 2.6), Color(0.18, 0.18, 0.18))
+
+
+func _create_helicopter(position: Vector3) -> void:
+	_create_block(position, Vector3(6, 1.6, 2.2), Color(0.2, 0.24, 0.2))
+	_create_block(position + Vector3(-3.6, 0.1, 0), Vector3(3.6, 0.4, 0.35), Color(0.15, 0.17, 0.15))
+	_create_block(position + Vector3(0, 1.4, 0), Vector3(7.4, 0.2, 0.2), Color(0.05, 0.05, 0.05))
+	_create_block(position + Vector3(2.6, -1.2, 0.7), Vector3(0.2, 1.0, 0.2), Color(0.12, 0.12, 0.12))
+	_create_block(position + Vector3(2.6, -1.2, -0.7), Vector3(0.2, 1.0, 0.2), Color(0.12, 0.12, 0.12))

@@ -3,6 +3,7 @@ extends Node3D
 @export_file("*.tscn") var next_level_path := ""
 @export var intro_text := ""
 @export var additional_enemy_positions: Array[Vector3] = []
+@export var mission_stages: Array[String] = []
 @export var reinforcements_delay := 15.0
 
 @onready var enemies: Node = $Enemies
@@ -59,7 +60,12 @@ func _ensure_status_label() -> void:
 
 func _update_status_label() -> void:
 	var label: Label = hud.get_node("Objective")
-	label.text = "%s\nEnemies Remaining: %d" % [intro_text, enemies.get_child_count()]
+	var stage_text := ""
+	if !mission_stages.is_empty():
+		var progress := 1.0 - (float(enemies.get_child_count()) / max(1.0, float(mission_stages.size() * 2)))
+		var stage_index := clamp(int(floor(progress * mission_stages.size())), 0, mission_stages.size() - 1)
+		stage_text = "\nMission: %s" % mission_stages[stage_index]
+	label.text = "%s%s\nEnemies Remaining: %d" % [intro_text, stage_text, enemies.get_child_count()]
 
 func _show_campaign_complete() -> void:
 	var label: Label = hud.get_node("Objective")

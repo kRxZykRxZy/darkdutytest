@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Weapon" load_steps=4 format=3]
+
+[ext_resource type="Texture2D" uid="uid://2jld33y6h5pq" path="res://sprites/crosshair.png" id="1_cross"]
+[ext_resource type="Script" uid="uid://dg01pkkc1c5vd" path="res://scripts/weapon.gd" id="2_weapon"]
+[ext_resource type="PackedScene" uid="uid://b2p7bbkuxf7m" path="res://models/blaster.glb" id="3_model"]
+
+[resource]
+script = ExtResource("2_weapon")
+weapon_name = "Battle Rifle"
+model = ExtResource("3_model")
+rotation = Vector3(0, 180, 0)
+muzzle_position = Vector3(0.1, -0.4, 1.5)
+cooldown = 0.2
+max_distance = 16
+damage = 26.0
+spread = 0.35
+shot_count = 1
+knockback = 14
+min_knockback = Vector2(0.01, 0.008)
+max_knockback = Vector2(0.018, 0.012)
+magazine_size = 20
+reserve_ammo = 120
+reload_time = 1.8
+scope_fov = 36.0
+sound_shoot = "sounds/blaster.ogg"
+crosshair = ExtResource("1_cross")
