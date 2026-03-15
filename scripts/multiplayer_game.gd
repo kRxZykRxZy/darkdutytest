@@ -21,6 +21,7 @@ var multiplayer_weapon_index := 0
 @onready var spawn_points: Node3D = $SpawnPoints
 @onready var status_label: Label = $HUD/Status
 @onready var loadout_label: Label = $HUD/Loadout
+@onready var weapon_image_rect: TextureRect = $HUD.get_node_or_null("WeaponImage") as TextureRect
 
 func _ready() -> void:
 	if multiplayer.multiplayer_peer == null:
@@ -29,6 +30,16 @@ func _ready() -> void:
 
 	_build_war_city()
 	_load_multiplayer_weapons()
+	if weapon_image_rect == null:
+		weapon_image_rect = TextureRect.new()
+		weapon_image_rect.name = "WeaponImage"
+		weapon_image_rect.offset_left = 970
+		weapon_image_rect.offset_top = 86
+		weapon_image_rect.offset_right = 1040
+		weapon_image_rect.offset_bottom = 156
+		weapon_image_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		weapon_image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		$HUD.add_child(weapon_image_rect)
 	_update_multiplayer_loadout_ui()
 
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -144,24 +155,13 @@ func _set_multiplayer_weapon_index(index: int) -> void:
 func _update_multiplayer_loadout_ui() -> void:
 	var lines: Array[String] = []
 	for i: int in range(multiplayer_weapons.size()):
-		var prefix := ">"
-		if i != multiplayer_weapon_index:
-			prefix = str(i + 1) if i < 5 else "-"
+		var prefix := str(i + 1) if i < 5 else "-"
+		if i == multiplayer_weapon_index:
+			prefix = ">"
 		lines.append("%s %s" % [prefix, multiplayer_weapons[i].weapon_name])
 	lines.append("Mouse Wheel / E: Switch")
 	loadout_label.text = "\n".join(lines)
 
-	var weapon_image_rect := get_node_or_null("HUD/WeaponImage") as TextureRect
-	if weapon_image_rect == null:
-		weapon_image_rect = TextureRect.new()
-		weapon_image_rect.name = "WeaponImage"
-		weapon_image_rect.offset_left = 970
-		weapon_image_rect.offset_top = 86
-		weapon_image_rect.offset_right = 1040
-		weapon_image_rect.offset_bottom = 156
-		weapon_image_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		weapon_image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		$HUD.add_child(weapon_image_rect)
 	if multiplayer_weapons.is_empty():
 		weapon_image_rect.texture = null
 		return
