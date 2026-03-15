@@ -310,7 +310,7 @@ func _on_reload_timer_timeout() -> void:
 	if !is_reloading:
 		return
 	var ammo_needed: int = weapon.magazine_size - current_ammo[weapon_index]
-	var ammo_to_load: int = mini(ammo_needed, reserve_ammo[weapon_index])
+	var ammo_to_load: int = mini(ammo_needed, int(reserve_ammo[weapon_index]))
 	current_ammo[weapon_index] += ammo_to_load
 	reserve_ammo[weapon_index] -= ammo_to_load
 	is_reloading = false
@@ -426,7 +426,7 @@ func _emit_ammo():
 
 func _get_loadout_lines() -> Array[String]:
 	var lines: Array[String] = []
-	for i in range(weapons.size()):
+	for i: int in range(weapons.size()):
 		var prefix := str(i + 1)
 		if i >= MAX_NUMBERED_WEAPONS:
 			prefix = "-"
