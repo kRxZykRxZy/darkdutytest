@@ -63,6 +63,9 @@ func _ready():
 		current_ammo.append(item.magazine_size)
 		reserve_ammo.append(item.reserve_ammo)
 
+	if !heal_timer.timeout.is_connected(_on_heal_timer_timeout):
+		heal_timer.timeout.connect(_on_heal_timer_timeout)
+
 	if weapons.is_empty():
 		push_error("Player has no weapons configured.")
 		health_updated.emit(health)
@@ -71,8 +74,6 @@ func _ready():
 
 	weapon = weapons[weapon_index]
 	change_weapon()
-	if !heal_timer.timeout.is_connected(_on_heal_timer_timeout):
-		heal_timer.timeout.connect(_on_heal_timer_timeout)
 
 	health_updated.emit(health)
 	loadout_updated.emit(_get_loadout_lines())
