@@ -32,7 +32,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	var move := (transform.basis * Vector3(input.x, 0, input.y)).normalized() * move_speed
+	var move: Vector3 = (transform.basis * Vector3(input.x, 0, input.y)).normalized() * move_speed
 
 	gravity += 20.0 * delta
 	if is_on_floor():

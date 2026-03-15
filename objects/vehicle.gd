@@ -53,7 +53,7 @@ func switch_seat(player: Node3D) -> String:
 func exit(player: Node3D) -> void:
 	if player == driver:
 		driver = null
-	if player == passenger:
+	elif player == passenger:
 		passenger = null
 
 func _seat_of(player: Node3D) -> String:

@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const VEHICLE_INTERACTION_RANGE := 4.0
 const VEHICLE_EXIT_OFFSET := 2.2
+const MAX_NUMBERED_WEAPONS := 5
 
 @export_subgroup("Properties")
 @export var movement_speed = 5
@@ -140,7 +141,7 @@ func action_jump():
 
 func _update_movement() -> void:
 	var move_input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	var move := (transform.basis * Vector3(move_input.x, 0, move_input.y)).normalized() * movement_speed
+	var move: Vector3 = (transform.basis * Vector3(move_input.x, 0, move_input.y)).normalized() * movement_speed
 	movement_velocity.x = move.x
 	movement_velocity.z = move.z
 
@@ -424,7 +425,7 @@ func _get_loadout_lines() -> Array[String]:
 	var lines: Array[String] = []
 	for i in range(weapons.size()):
 		var prefix := str(i + 1)
-		if i >= 5:
+		if i >= MAX_NUMBERED_WEAPONS:
 			prefix = "-"
 		lines.append("%s %s" % [prefix, weapons[i].weapon_name])
 	lines.append("Mouse Wheel / E: Switch")
