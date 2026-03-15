@@ -65,7 +65,9 @@ func _update_status_label() -> void:
 	var label: Label = hud.get_node("Objective")
 	var stage_text := ""
 	if !mission_stages.is_empty():
-		var progress := 1.0 - (float(enemies.get_child_count()) / max(1.0, float(initial_enemy_count)))
+		var progress := 0.0
+		if initial_enemy_count > 0:
+			progress = 1.0 - (float(enemies.get_child_count()) / float(initial_enemy_count))
 		var stage_index := clamp(int(floor(progress * mission_stages.size())), 0, mission_stages.size() - 1)
 		stage_text = "\nMission: %s" % mission_stages[stage_index]
 	label.text = "%s%s\nEnemies Remaining: %d" % [intro_text, stage_text, enemies.get_child_count()]

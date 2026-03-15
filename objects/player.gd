@@ -64,6 +64,8 @@ func _ready():
 
 	if weapons.is_empty():
 		push_error("Player has no weapons configured.")
+		health_updated.emit(health)
+		loadout_updated.emit([])
 		return
 
 	weapon = weapons[weapon_index]
@@ -247,7 +249,8 @@ func action_shoot():
 				collider.damage(weapon.damage)
 
 	# Knockback
-	movement_velocity -= transform.basis.z * weapon.knockback
+	if !active_vehicle:
+		movement_velocity -= transform.basis.z * weapon.knockback
 
 	if current_ammo[weapon_index] == 0 and reserve_ammo[weapon_index] > 0:
 		action_reload()
@@ -366,7 +369,7 @@ func action_vehicle_exit() -> void:
 	active_vehicle = null
 	vehicle_seat = ""
 	gravity = 0.0
-	var exit_pos := current_vehicle.global_transform.origin + current_vehicle.transform.basis.x * VEHICLE_EXIT_OFFSET
+	var exit_pos := current_vehicle.global_transform.origin + current_vehicle.global_transform.basis.x * VEHICLE_EXIT_OFFSET
 	global_position = exit_pos
 
 

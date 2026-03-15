@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	velocity.y = -gravity
 	move_and_slide()
 
-	_send_transform.rpc_unreliable(global_transform, head.rotation.x)
+	_send_transform.rpc(global_transform, head.rotation.x)
 
 func _input(event: InputEvent) -> void:
 	if !local_controlled:
