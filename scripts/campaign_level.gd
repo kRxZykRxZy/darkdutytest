@@ -10,9 +10,11 @@ extends Node3D
 @onready var hud: CanvasLayer = $HUD
 
 var reinforcements_spawned := false
+var initial_enemy_count := 0
 
 func _ready() -> void:
 	_spawn_extra_enemies()
+	initial_enemy_count = enemies.get_child_count()
 	_ensure_status_label()
 	_update_status_label()
 
@@ -45,6 +47,7 @@ func _spawn_reinforcements() -> void:
 	label.text = "%s\nReinforcements incoming..." % intro_text
 	await get_tree().create_timer(reinforcements_delay / 8.0).timeout
 	_spawn_extra_enemies()
+	initial_enemy_count = max(initial_enemy_count, enemies.get_child_count())
 
 func _ensure_status_label() -> void:
 	if hud.has_node("Objective"):
@@ -62,7 +65,7 @@ func _update_status_label() -> void:
 	var label: Label = hud.get_node("Objective")
 	var stage_text := ""
 	if !mission_stages.is_empty():
-		var progress := 1.0 - (float(enemies.get_child_count()) / max(1.0, float(mission_stages.size() * 2)))
+		var progress := 1.0 - (float(enemies.get_child_count()) / max(1.0, float(initial_enemy_count)))
 		var stage_index := clamp(int(floor(progress * mission_stages.size())), 0, mission_stages.size() - 1)
 		stage_text = "\nMission: %s" % mission_stages[stage_index]
 	label.text = "%s%s\nEnemies Remaining: %d" % [intro_text, stage_text, enemies.get_child_count()]
