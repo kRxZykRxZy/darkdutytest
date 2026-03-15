@@ -32,4 +32,7 @@ func _on_ammo_updated(current: int, reserve: int, weapon_name: String) -> void:
 	ammo_label.text = "%s\n%d / %d" % [weapon_name, current, reserve]
 
 func _on_loadout_updated(lines: Array[String]) -> void:
-	$Loadout.text = "\n".join(lines)
+	var loadout_label := get_node_or_null("Loadout") as Label
+	if loadout_label == null:
+		return
+	loadout_label.text = "\n".join(lines)
