@@ -251,7 +251,7 @@ func action_shoot():
 
 	# Knockback
 	if !active_vehicle:
-		movement_velocity -= transform.basis.z * weapon.knockback
+		movement_velocity += transform.basis.z * weapon.knockback
 
 	if current_ammo[weapon_index] == 0 and reserve_ammo[weapon_index] > 0:
 		action_reload()
@@ -371,6 +371,8 @@ func action_vehicle_exit() -> void:
 	vehicle_seat = ""
 	gravity = 0.0
 	var exit_pos := current_vehicle.global_transform.origin + current_vehicle.global_transform.basis.x * VEHICLE_EXIT_OFFSET
+	if current_vehicle.has_node("ExitPoint"):
+		exit_pos = current_vehicle.get_node("ExitPoint").global_position
 	global_position = exit_pos
 
 
