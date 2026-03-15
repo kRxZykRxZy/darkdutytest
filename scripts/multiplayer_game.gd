@@ -162,6 +162,8 @@ func _update_multiplayer_loadout_ui() -> void:
 	lines.append("Mouse Wheel / E: Switch")
 	loadout_label.text = "\n".join(lines)
 
+	if weapon_image_rect == null:
+		return
 	if multiplayer_weapons.is_empty():
 		weapon_image_rect.texture = null
 		return
