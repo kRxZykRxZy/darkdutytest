@@ -1,7 +1,7 @@
 extends Node3D
 
 const PLAYER_SCENE := preload("res://objects/network_player.tscn")
-const TEAM_NAMES := ["SHELLSHOCKERS", "RUSHTEAM"]
+const TEAM_NAMES: Array[String] = ["SHELLSHOCKERS", "RUSHTEAM"]
 
 var players: Dictionary = {}
 var peer_teams: Dictionary = {}
@@ -31,7 +31,7 @@ func _ready() -> void:
 func _team_for_peer(peer_id: int) -> String:
 	if peer_teams.has(peer_id):
 		return peer_teams[peer_id]
-	var team := TEAM_NAMES[peer_teams.size() % TEAM_NAMES.size()]
+	var team: String = TEAM_NAMES[peer_teams.size() % TEAM_NAMES.size()]
 	peer_teams[peer_id] = team
 	return team
 
@@ -39,7 +39,7 @@ func _spawn_player(peer_id: int, forced_team: String = "") -> void:
 	if players.has(peer_id):
 		return
 
-	var team = forced_team if !forced_team.is_empty() else _team_for_peer(peer_id)
+	var team: String = forced_team if !forced_team.is_empty() else _team_for_peer(peer_id)
 	peer_teams[peer_id] = team
 
 	var instance = PLAYER_SCENE.instantiate()
@@ -72,7 +72,7 @@ func _request_spawn(peer_id: int, password: String) -> void:
 	if NetworkManager.server_password != "" and NetworkManager.server_password != password:
 		_kick_with_error.rpc_id(peer_id, "Wrong password")
 		return
-	var team := _team_for_peer(peer_id)
+	var team: String = _team_for_peer(peer_id)
 	_spawn_player(peer_id, team)
 	_sync_existing_player.rpc(peer_id, team)
 
