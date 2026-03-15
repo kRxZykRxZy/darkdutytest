@@ -309,8 +309,8 @@ func action_reload() -> void:
 func _on_reload_timer_timeout() -> void:
 	if !is_reloading:
 		return
-	var ammo_needed := weapon.magazine_size - current_ammo[weapon_index]
-	var ammo_to_load := min(ammo_needed, reserve_ammo[weapon_index])
+	var ammo_needed: int = weapon.magazine_size - current_ammo[weapon_index]
+	var ammo_to_load: int = mini(ammo_needed, reserve_ammo[weapon_index])
 	current_ammo[weapon_index] += ammo_to_load
 	reserve_ammo[weapon_index] -= ammo_to_load
 	is_reloading = false
