@@ -3,6 +3,8 @@ extends Control
 @onready var menu_stack: VBoxContainer = %MenuStack
 @onready var campaign_panel: VBoxContainer = %CampaignPanel
 @onready var multiplayer_panel: VBoxContainer = %MultiplayerPanel
+@onready var host_page: VBoxContainer = %HostPage
+@onready var join_page: VBoxContainer = %JoinPage
 @onready var host_port: SpinBox = %HostPort
 @onready var host_max_players: SpinBox = %HostMaxPlayers
 @onready var host_password: LineEdit = %HostPassword
@@ -27,6 +29,21 @@ func _on_campaign_pressed() -> void:
 func _on_local_multiplayer_pressed() -> void:
 	menu_stack.visible = false
 	multiplayer_panel.visible = true
+	_show_host_page()
+
+func _on_show_host_page_pressed() -> void:
+	_show_host_page()
+
+func _on_show_join_page_pressed() -> void:
+	_show_join_page()
+
+func _show_host_page() -> void:
+	host_page.visible = true
+	join_page.visible = false
+
+func _show_join_page() -> void:
+	host_page.visible = false
+	join_page.visible = true
 
 func _on_back_pressed() -> void:
 	_show_main_menu()
@@ -47,13 +64,18 @@ func _on_host_lobby_pressed() -> void:
 	var ok := NetworkManager.start_host(int(host_port.value), int(host_max_players.value), host_password.text)
 	if !ok:
 		status_label.text = "Failed to host lobby. Check port and try again."
+		status_label.text = "Failed to host server. Check port and try again."
+	else:
+		status_label.text = "Server launched. Share your IP/domain + port to join online."
 
 func _on_join_lobby_pressed() -> void:
 	var address_text := join_address.text.strip_edges()
 	if address_text.is_empty():
 		status_label.text = "Enter a host URL/IP first (example: 192.168.1.20)."
+		status_label.text = "Enter a host domain/IP first (example: fps.example.com or 192.168.1.20)."
 		return
 
 	var ok := NetworkManager.join_server(address_text, int(join_port.value), join_password.text)
 	if !ok:
 		status_label.text = "Failed to join lobby."
+		status_label.text = "Failed to join server."
